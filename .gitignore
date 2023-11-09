@@ -13,7 +13,7 @@ __pycache__/
 .vscode/launch.json
 .vscode/settings.json
 .vscode/ipch
-PIO_EMG_Controller/cache/
+arduino_controller/cache/
 
 
 # Distribution / packaging
