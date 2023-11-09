@@ -54,7 +54,7 @@ void loop() {
   rmsValue2 = sqrt(sumSquared2 / (float)numSamples);
   
   // Print out the RMS values
-  Serial.println(rmsValue2);
+  Serial.print(rmsValue2);
   Serial.print(",");
   Serial.println(rmsValue);
 
