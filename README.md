@@ -17,3 +17,9 @@ From here on it's pretty straight forward. You can open the `src` folder and sta
 Note: The serial connection can only be used by one program at a time. So if you have the serial monitor open, you can't upload new code to the Arduino. You have to close the serial monitor first. Same goes for using the serial plotter of the Arduino IDE. 
 
 
+## Python Setup
+
+1. Have Conda installed. If you don't have it, install it from [here](https://docs.conda.io/en/latest/miniconda.html)
+2. Create a new conda environment with `conda create -n nise python=3.9`.
+3. Activate the environment with `conda activate nise`.
+4. Install the requirements with `pip install -r requirements.txt`
