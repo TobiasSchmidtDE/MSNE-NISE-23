@@ -5,21 +5,26 @@ import matplotlib.patches as patches
 import numpy as np
 import random
 import time
+import matplotlib
+
+# Get the current backend
+current_backend = matplotlib.get_backend()
+print("Current Matplotlib backend:", current_backend)
 
 # Constants
 FIG_SIZE = (12, 8)  # Figure size (width, height) in inches
-ANIMATION_INTERVAL = 10  # Animation update interval in milliseconds
-SIMULATION_TIME = 120  # Total simulation time in seconds (10 minutes)
+ANIMATION_INTERVAL = 5  # Animation update interval in milliseconds
+SIMULATION_TIME = 60  # Total simulation time in seconds (10 minutes)
 SAMPLE_RATE = 100  # Sample rate in Hz
 MAX_SIZE = (
     SAMPLE_RATE * SIMULATION_TIME
 )  # Max size of the data array / axis length, 30 seconds at 60Hz
 SPIKE_DURATION = int(0.5 * SAMPLE_RATE)  # Duration of each spike in samples
 WINDOW_SIZE = SAMPLE_RATE * 10
-NUMBER_OF_SPIKES = 20  # Total number of spikes to generate
+NUMBER_OF_SPIKES = 25  # Total number of spikes to generate
 
 # Constants for new spike generation
-CALIBRATION_TIME = SIMULATION_TIME * 0.1  # Calibration/warm-up time in seconds
+CALIBRATION_TIME = 10  # Calibration/warm-up time in seconds
 CALIBRATION_SAMPLES = CALIBRATION_TIME * SAMPLE_RATE  # Calibration samples
 
 
@@ -29,10 +34,15 @@ def generate_spikes_with_calibration(spike_value_left=3, spike_value_right=8):
     # An actual uniform distribution makes it way to likely to have spikes too close to each other
     # Therefore we generate a linspace and add some random noise
     spike_times = np.linspace(
-        CALIBRATION_SAMPLES, MAX_SIZE - SPIKE_DURATION, NUMBER_OF_SPIKES, dtype=int
+        CALIBRATION_SAMPLES,
+        MAX_SIZE - WINDOW_SIZE - SPIKE_DURATION,
+        NUMBER_OF_SPIKES,
+        dtype=int,
     )
     # calculate the mean interval between spikes
-    mean_interval = (MAX_SIZE - SPIKE_DURATION - CALIBRATION_SAMPLES) / NUMBER_OF_SPIKES
+    mean_interval = (
+        MAX_SIZE - WINDOW_SIZE - SPIKE_DURATION - CALIBRATION_SAMPLES
+    ) / NUMBER_OF_SPIKES
     spike_times += np.random.randint(
         int(-mean_interval * 0.5), int(mean_interval * 0.5), NUMBER_OF_SPIKES
     )
@@ -41,8 +51,11 @@ def generate_spikes_with_calibration(spike_value_left=3, spike_value_right=8):
     left_trace = np.zeros(MAX_SIZE)
     right_trace = np.zeros(MAX_SIZE)
 
+    # the first spike is always on the right
+    right_trace[spike_times[0] : spike_times[0] + SPIKE_DURATION] = spike_value_right
+
     # Assign spikes to left or right and update traces
-    for spike_time in spike_times:
+    for spike_time in spike_times[1:]:
         if random.choice([True, False]):  # Randomly choose left or right
             left_trace[spike_time : spike_time + SPIKE_DURATION] = spike_value_left
         else:
@@ -55,23 +68,21 @@ def generate_spikes_with_calibration(spike_value_left=3, spike_value_right=8):
 left_trace, right_trace = generate_spikes_with_calibration()
 
 
-def run_data_labeler(port=5556, topic="emg_data"):
-    # context = zmq.Context()
-    # subscriber = context.socket(zmq.SUB)
-    # subscriber.connect(f"tcp://localhost:{port}")
-    # subscriber.setsockopt_string(zmq.SUBSCRIBE, topic)
+def run_data_labeler():
+    context = zmq.Context()
+    publisher = context.socket(zmq.PUB)
+    publisher.bind(f"tcp://*:{5557}")
 
-    create_label_plot(left_trace, right_trace)
+    create_label_plot(publisher, left_trace, right_trace)
 
 
-def create_label_plot(left_trace, right_trace):
+def create_label_plot(publisher, left_trace, right_trace):
     fig, (ax1, ax2) = plt.subplots(
         2, 1, figsize=FIG_SIZE, gridspec_kw={"height_ratios": [1, 2]}
     )
     xs_window = np.arange(0, WINDOW_SIZE)
     xs_full = np.arange(0, MAX_SIZE)
     start_time = time.time()
-
     # Plot for the full trace
     # Create a gray rectangle overlay for the ax1 plot
     rect = patches.Rectangle(
@@ -139,6 +150,11 @@ def create_label_plot(left_trace, right_trace):
         ax2.set_ylabel("Signal Value")
         ax2.legend(loc="upper left")
 
+        # Publish the label data on the "label_data" topic
+        # the format should be timestamp, left_label, right_label
+        decoded_bytes = f"{time.time()},{left_trace[sample_index + action_line_pos]},{right_trace[sample_index + action_line_pos]}"
+        publisher.send_string(f"label_data {decoded_bytes}")
+
     ani = animation.FuncAnimation(
         fig,
         animate,
@@ -148,7 +164,14 @@ def create_label_plot(left_trace, right_trace):
         ),
         interval=ANIMATION_INTERVAL,
     )
+
+    # to put it into the upper left corner for example:
+    # mngr = plt.get_current_fig_manager()
+    # mngr.window.setGeometry(443, -1049, 1916, 564)
+
     plt.show()
+    # send message to start labeled data collection
+    # publisher.send_string(f"label_data start")
 
 
 if __name__ == "__main__":

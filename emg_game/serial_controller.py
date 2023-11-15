@@ -25,8 +25,8 @@ def run_serial_controller(port=5556):
             # Decode bytes to string, removing the trailing newline character
             decoded_bytes = ser_bytes.decode("utf-8").strip()
 
-            # print(f"Serial controller sends data: {decoded_bytes}")
-
+            # the format of the data "sensor_1,sensor_2", we want "timestamp,sensor_1,sensor_2"
+            decoded_bytes = f"{time.time()},{decoded_bytes}"
             # Publish the data on the "emg_data" topic
             publisher.send_string(f"emg_data {decoded_bytes}")
 
