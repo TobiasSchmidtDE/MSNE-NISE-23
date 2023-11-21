@@ -16,7 +16,7 @@ __pycache__/
 arduino_controller/cache/
 
 # debug data
-data\recordings_mocked
+data/recordings_mocked
 
 
 # Distribution / packaging
