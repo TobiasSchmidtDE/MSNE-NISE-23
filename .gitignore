@@ -15,6 +15,9 @@ __pycache__/
 .vscode/ipch
 arduino_controller/cache/
 
+# debug data
+data\recordings_mocked
+
 
 # Distribution / packaging
 .Python

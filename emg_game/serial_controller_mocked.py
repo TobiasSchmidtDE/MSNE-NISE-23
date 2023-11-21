@@ -9,7 +9,7 @@ from tqdm import tqdm
 SERIAL_FAKE_HZ = 10
 
 
-def run_mock_controller(recording: Path):
+def run_mock_serial_controller(recording: Path):
     context = zmq.Context()
     publisher = context.socket(zmq.PUB)
     publisher.bind(f"tcp://*:{5556}")
@@ -64,4 +64,4 @@ def run_mock_controller(recording: Path):
 
 
 if __name__ == "__main__":
-    run_mock_controller(recording=r"data\recordings\2023-11-15_21-15-09.csv")
+    run_mock_serial_controller(recording=r"data\recordings\2023-11-15_21-15-09.csv")
