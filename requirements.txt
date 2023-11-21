@@ -2,3 +2,5 @@ matplotlib
 numpy 
 zmq
 pyserial
+tqdm 
+pandas
