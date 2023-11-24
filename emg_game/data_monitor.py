@@ -15,15 +15,18 @@ def run_data_monitor():
     subscriber.connect(f"tcp://localhost:{5556}")
     subscriber.setsockopt_string(zmq.SUBSCRIBE, "emg_data")
 
-    create_data_monitor_plot(subscriber)
+    publisher = context.socket(zmq.PUB)
+    publisher.bind(f"tcp://*:{5558}")
+
+    create_data_monitor_plot(subscriber, publisher)
 
 
-def create_data_monitor_plot(subscriber):
+def create_data_monitor_plot(subscriber, publisher):
     # Customizable constants
     FIG_SIZE = (12, 6)  # Figure size (width, height) in inches
     MAX_SIZE = 500  # Max size of the data array / axis length
     ANIMATION_INTERVAL = 1  # Animation update interval in milliseconds
-    BUFFER_SIZE = MAX_SIZE * 10  # Size of the data buffer for background processing
+    BUFFER_SIZE = MAX_SIZE * 1  # Size of the data buffer for background processing
 
     # Create figure for plotting with a specified size
     # fig, ax = plt.subplots(figsize=FIG_SIZE)
@@ -111,6 +114,16 @@ def create_data_monitor_plot(subscriber):
             except zmq.Again:
                 # No more messages in the queue, break the loop to update the plot
                 break
+
+        # check whether the last data points are more than 1 std away from the mean
+        # if so, send a message to the game
+        if ys1[-i:].mean() > rolling_stats1["mean"][-1] + 2 * rolling_stats1["std"][-1]:
+            print("emg_spike left")
+            publisher.send_string(f"emg_spike left")
+
+        if ys2[-i:].mean() > rolling_stats2["mean"][-1] + 2 * rolling_stats2["std"][-1]:
+            print("emg_spike right")
+            publisher.send_string(f"emg_spike right")
 
         # Draw x and y lists
         ax.clear()

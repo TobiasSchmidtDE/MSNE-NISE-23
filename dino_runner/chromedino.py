@@ -4,6 +4,7 @@ import datetime
 import os
 import random
 import threading
+import zmq
 
 import pygame
 
@@ -50,7 +51,8 @@ CLOUD = pygame.image.load(os.path.join("assets/Other", "Cloud.png"))
 
 BG = pygame.image.load(os.path.join("assets/Other", "Track.png"))
 
-FONT_COLOR=(0,0,0)
+FONT_COLOR = (0, 0, 0)
+
 
 class Dinosaur:
     """
@@ -133,6 +135,7 @@ class Cloud:
     """
     Creates and manages cloud objects that move across the screen
     """
+
     def __init__(self):
         self.x = SCREEN_WIDTH + random.randint(800, 1000)
         self.y = random.randint(50, 100)
@@ -201,7 +204,7 @@ def main():
     clock = pygame.time.Clock()
     player = Dinosaur()
     cloud = Cloud()
-    game_speed = 20
+    game_speed = 10
     x_pos_bg = 0
     y_pos_bg = 380
     points = 0
@@ -217,11 +220,15 @@ def main():
             game_speed += 1
         current_time = datetime.datetime.now().hour
         with open("score.txt", "r") as f:
-            score_ints = [int(x) for x in f.read().split()]  
+            score_ints = [int(x) for x in f.read().split()]
             highscore = max(score_ints)
             if points > highscore:
-                highscore=points 
-            text = font.render("High Score: "+ str(highscore) + "  Points: " + str(points), True, FONT_COLOR)
+                highscore = points
+            text = font.render(
+                "High Score: " + str(highscore) + "  Points: " + str(points),
+                True,
+                FONT_COLOR,
+            )
         textRect = text.get_rect()
         textRect.center = (900, 40)
         SCREEN.blit(text, textRect)
@@ -247,7 +254,7 @@ def main():
         font = pygame.font.Font("freesansbold.ttf", 30)
         text = font.render("Game Paused, Press 'u' to Unpause", True, FONT_COLOR)
         textRect = text.get_rect()
-        textRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT  // 3)
+        textRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 3)
         SCREEN.blit(text, textRect)
         pygame.display.update()
 
@@ -259,7 +266,39 @@ def main():
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_u:
                     unpause()
 
+    context = zmq.Context()
+
+    subscriber_label_data = context.socket(zmq.SUB)
+    subscriber_label_data.connect(f"tcp://localhost:{5558}")
+    subscriber_label_data.setsockopt_string(zmq.SUBSCRIBE, "emg_spike")
+
     while run:
+        # Read messages one by one until there are none left
+        emg_cmd = []
+        while True:
+            # print("trying to read emg")
+            try:
+                topic, message = subscriber_label_data.recv_string(
+                    flags=zmq.NOBLOCK
+                ).split()
+                emg_cmd.append(message)
+            except zmq.Again:
+                # No more messages in the queue
+                break
+        if len(emg_cmd) > 0:
+            if emg_cmd[-1] == "left":
+                print("left command issued, ducking")
+                # pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_DOWN))
+                player.dino_duck = True
+                player.dino_run = False
+                player.dino_jump = False
+
+            if emg_cmd[-1] == "right":
+                print("right command issued, jumping")
+                player.dino_duck = False
+                player.dino_run = False
+                player.dino_jump = True
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -291,24 +330,28 @@ def main():
             first_obstacle = obstacles[0]
             obstacle_x = first_obstacle.rect.x
             obstacle_y = first_obstacle.rect.y
-            obstacle_text = font.render(f"Obstacle: x={obstacle_x}, y={obstacle_y}", True, (0, 0, 0))
+            obstacle_text = font.render(
+                f"Obstacle: x={obstacle_x}, y={obstacle_y}", True, (0, 0, 0)
+            )
             obtextRect = obstacle_text.get_rect()
             obtextRect.center = (140, 20)
             SCREEN.blit(obstacle_text, obtextRect)
 
-            if obstacle_x <= 17 * game_speed and obstacle_y >= 290:
-                player.dino_jump = True
-                player.dino_duck = False
-                player.dino_run = False
-            if obstacle_x <= 17 * game_speed and obstacle_y < 290:
-                player.dino_duck = True
-                player.dino_run = False
-                player.dino_jump = False
+            # if obstacle_x <= 17 * game_speed and obstacle_y >= 290:
+            #     player.dino_jump = True
+            #     player.dino_duck = False
+            #     player.dino_run = False
+            # if obstacle_x <= 17 * game_speed and obstacle_y < 290:
+            #     player.dino_duck = True
+            #     player.dino_run = False
+            #     player.dino_jump = False
 
             # dino
             dinosaur_x = player.dino_rect.x
             dinosaur_y = player.dino_rect.y
-            dino_text = font.render(f"Dinosaur: x={dinosaur_x}, y={dinosaur_y}", True, (0, 0, 0))
+            dino_text = font.render(
+                f"Dinosaur: x={dinosaur_x}, y={dinosaur_y}", True, (0, 0, 0)
+            )
             ditextRect = dino_text.get_rect()
             ditextRect.center = (135, 50)
             SCREEN.blit(dino_text, ditextRect)
@@ -336,14 +379,15 @@ def main():
 def menu(death_count):
     global points
     global FONT_COLOR
+
     run = True
     while run:
         current_time = datetime.datetime.now().hour
         if 7 < current_time < 19:
-            FONT_COLOR=(0,0,0)
+            FONT_COLOR = (0, 0, 0)
             SCREEN.fill((255, 255, 255))
         else:
-            FONT_COLOR=(255,255,255)
+            FONT_COLOR = (255, 255, 255)
             SCREEN.fill((128, 128, 128))
         font = pygame.font.Font("freesansbold.ttf", 30)
 
