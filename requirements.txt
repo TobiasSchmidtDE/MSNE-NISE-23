@@ -3,4 +3,7 @@ numpy
 zmq
 pyserial
 tqdm 
+pygame
 pandas
+scipy
+ipykernel
