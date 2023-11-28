@@ -4,7 +4,7 @@ import numpy as np
 import serial
 
 # Customizable constants
-SERIAL_PORT = "COM9"  # Serial port
+SERIAL_PORT = "/dev/cu.usbserial-0286063A"  # Serial port
 BAUD_RATE = 512000  # Baud rate for serial communication
 FIG_SIZE = (12, 6)  # Figure size (width, height) in inches
 MAX_SIZE = 500  # Max size of the data array / axis length

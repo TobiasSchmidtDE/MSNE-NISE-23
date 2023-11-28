@@ -4,7 +4,7 @@ import serial
 
 
 # Customizable constants
-SERIAL_PORT = "COM9"  # Serial port (change this to the correct port for your system)
+SERIAL_PORT = "/dev/cu.usbserial-0286063A"  # Serial port (change this to the correct port for your system)
 BAUD_RATE = 512000  # Baud rate for serial communication
 
 

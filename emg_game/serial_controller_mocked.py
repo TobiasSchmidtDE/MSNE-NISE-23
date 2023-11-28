@@ -64,4 +64,4 @@ def run_mock_serial_controller(recording: Path):
 
 
 if __name__ == "__main__":
-    run_mock_serial_controller(recording=r"data\recordings\2023-11-15_21-15-09.csv")
+    run_mock_serial_controller(recording=str(Path("data/recordings/2023-11-15_21-15-09.csv")))

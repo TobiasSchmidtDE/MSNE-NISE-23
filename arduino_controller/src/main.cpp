@@ -5,22 +5,18 @@ const int analogInPin1 = 26;  // Analog pin A0, GPIO 26
 const int analogInPin2 = 34;  // Analog pin A2, GPIO 28
 
 // Variables for sensor values and their absolute values
-int sensorValue = 0;        // Value from sensor 1
-int absValue = 0;           // Absolute value for sensor 1
+int sensorValue1 = 0;        // Value from sensor 1
 int sensorValue2 = 0;       // Value from sensor 2
-int absValue2 = 0;          // Absolute value for sensor 2
 
 // Sampling and thresholding parameters
-int numSamples = 200;
-int threshold = 100;
+int buffersize = 300;
+int rmssize = 50;
+int baseline1 = 0;
+int baseline2 = 0;
+int rms1 = 0;
+int rms2 = 0;
+int threshold = 0;
 
-// Calibration parameters (unused in the current code)
-bool calibration = false;
-int calibValues1 = 0;
-int calibValues2 = 0;
-int baseline1 = 1720;       // Preset baseline for sensor 1
-int baseline2 = 1730;       // Preset baseline for sensor 2
-int numCalibSamples = 20;
 
 // Motor control pin
 int motorPin1 = 13;  // GPIO 13 for vibration motor 1
@@ -33,30 +29,17 @@ void setup() {
 
 void loop() {
   // Variables for calculating RMS values
-  long sumSquared = 0;
-  long sumSquared2 = 0;
   float rmsValue;
   float rmsValue2;
 
-  // Read and process sensor data
-  for (int i = 0; i < numSamples; i++) {
-    sensorValue = analogRead(analogInPin1);  // Read the analog input from sensor 1
-    absValue = abs(sensorValue - baseline1);  // Calculate the absolute value
-    sumSquared += absValue * absValue;        // Accumulate the sum of squares
 
-    sensorValue2 = analogRead(analogInPin2);  // Read the analog input from sensor 2
-    absValue2 = abs(sensorValue2 - baseline2);  // Calculate the absolute value
-    sumSquared2 += absValue2 * absValue2;      // Accumulate the sum of squares
-  }
-
-  // Calculate the RMS values
-  rmsValue = sqrt(sumSquared / (float)numSamples);
-  rmsValue2 = sqrt(sumSquared2 / (float)numSamples);
-  
   // Print out the RMS values
-  Serial.print(rmsValue2);
+  // Serial.print(rmsValue2);
+  Serial.print(analogRead(analogInPin1));   // Gleichfarbige Kabel = Jump
   Serial.print(",");
-  Serial.println(rmsValue);
+  Serial.print(analogRead(analogInPin2));   // Andersfarbige Kabel = Duck
+  // Serial.println(rmsValue);
+
 
   // Trigger vibrotactile feedback if RMS value is above the threshold for sensor 1
   if (rmsValue > threshold) {
@@ -85,5 +68,5 @@ void loop() {
   }
 
   // Short delay before the next loop iteration
-  delay(50);
+  delay(72);
 }

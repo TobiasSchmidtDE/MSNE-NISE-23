@@ -4,6 +4,7 @@ from emg_game.serial_controller_mocked import run_mock_serial_controller
 from emg_game.data_collector import run_data_collector, run_labeled_data_collector
 from emg_game.data_monitor import run_data_monitor
 from emg_game.data_labeler import run_data_labeler
+from pathlib import Path
 
 
 def start_components(mode: str):
@@ -33,11 +34,11 @@ def start_components(mode: str):
         processes += [
             Process(
                 target=run_mock_serial_controller,
-                kwargs=dict(recording=r"data\recordings\2023-11-15_21-15-09.csv"),
+                kwargs=dict(recording=str(Path("data/recordings/2023-11-15_21-15-09.csv"))),
             ),
             Process(
                 target=run_data_collector,
-                kwargs=dict(output_folder="./data/recordings_mocked/"),
+                kwargs=dict(output_folder=str(Path("./data/recordings_mocked/"))),
             ),
             Process(target=run_data_monitor),
         ]

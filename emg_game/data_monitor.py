@@ -15,10 +15,10 @@ def run_data_monitor():
     subscriber.connect(f"tcp://localhost:{5556}")
     subscriber.setsockopt_string(zmq.SUBSCRIBE, "emg_data")
 
-    publisher = context.socket(zmq.PUB)
-    publisher.bind(f"tcp://*:{5558}")
+    #publisher = context.socket(zmq.PUB)
+    #publisher.bind(f"tcp://*:{5558}")
 
-    create_data_monitor_plot(subscriber, publisher)
+    create_data_monitor_plot(subscriber, None)
 
 
 def create_data_monitor_plot(subscriber, publisher):
@@ -117,13 +117,13 @@ def create_data_monitor_plot(subscriber, publisher):
 
         # check whether the last data points are more than 1 std away from the mean
         # if so, send a message to the game
-        if ys1[-i:].mean() > rolling_stats1["mean"][-1] + 2 * rolling_stats1["std"][-1]:
-            print("emg_spike left")
-            publisher.send_string(f"emg_spike left")
+        #if ys1[-i:].mean() > rolling_stats1["mean"][-1] + 2 * rolling_stats1["std"][-1]:
+        #    print("emg_spike left")
+        #    publisher.send_string(f"emg_spike left")
 
-        if ys2[-i:].mean() > rolling_stats2["mean"][-1] + 2 * rolling_stats2["std"][-1]:
-            print("emg_spike right")
-            publisher.send_string(f"emg_spike right")
+        #if ys2[-i:].mean() > rolling_stats2["mean"][-1] + 2 * rolling_stats2["std"][-1]:
+        #    print("emg_spike right")
+        #    publisher.send_string(f"emg_spike right")
 
         # Draw x and y lists
         ax.clear()
