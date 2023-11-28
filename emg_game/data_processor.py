@@ -11,8 +11,13 @@ def asdasd(port=5556):
     subscriber.setsockopt_string(zmq.SUBSCRIBE, "emg_data")
 
     # Publisher to send commands to pygame
-    publisher = context.socket(zmq.PUB)
-    publisher.bind(f"tcp://*:{5558}")
+    threshold_publisher = context.socket(zmq.PUB)
+    threshold_publisher.bind(f"tcp://*:{5558}")
+    
+    
+    # Publisher to send commands to pygame
+    rms_publisher = context.socket(zmq.PUB)
+    rms_publisher.bind(f"tcp://*:{5559}")
     
     print("ready")
     
@@ -37,7 +42,6 @@ def asdasd(port=5556):
     timedelay = 1            # Time delay in which another command can not be triggered
     num_std = 4                # Number of standard deviations before threshold
 
-    
     # loop to listen to subscriber
     while True:
         # Read messages one by one until there are none left
@@ -49,33 +53,38 @@ def asdasd(port=5556):
                 data += [[float(timestamp), float(sensor_1), float(sensor_2)] ]
                 num_messages += 1
                 
-                # Flush the data to the file after each write
+                
+                np_data = np.array(data)
+
+                ## CALCULATE RMS VALUES
+                
+                # Calculate rms values using adaptive threshold over the last {buffersize} samples      
+                if (np_data.shape[0] > buffersize):
+                    
+                    # Calculate baseline as mean of the last {buffersize} values
+                    baseline1 = np.mean( np_data[-buffersize:,1] )
+                    baseline2 = np.mean( np_data[-buffersize:,2] )
+            
+                    # Subtract baseline for zero centering & do absolute value
+                    abs_val1 = abs(np_data[-windowsize:,1] - baseline1)
+                    abs_val2 = abs(np_data[-windowsize:,2] - baseline2)
+                    
+                    # RMS of jumping & sneaking    
+                    rms1_new = np.sqrt(1/windowsize * np.sum(abs_val1 * abs_val1)) 
+                    rms2_new = np.sqrt(1/windowsize * np.sum(abs_val2 * abs_val2))
+                    rms_publisher.send_string(f"rms_data {timestamp},{rms1_new},{rms2_new}")
+                
+                    rms1 = np.append( rms1, rms1_new)
+                    rms2 = np.append( rms2, rms2_new)
+                    calibration = True
+                    
+                    ## !!! Output rms1/2 values on serial monitor !!!  
+
             except zmq.Again:
                 # No more messages in the queue
                 break
             
-        np_data = np.array(data)
-
-
-        ## CALCULATE RMS VALUES
         
-        # Calculate rms values using adaptive threshold over the last {buffersize} samples      
-        if (np_data.shape[0] > buffersize):
-            
-            # Calculate baseline as mean of the last {buffersize} values
-            baseline1 = np.mean( np_data[-buffersize:,1] )
-            baseline2 = np.mean( np_data[-buffersize:,2] )
-     
-            # Subtract baseline for zero centering & do absolute value
-            abs_val1 = abs(np_data[-windowsize:,1] - baseline1)
-            abs_val2 = abs(np_data[-windowsize:,2] - baseline2)
-            
-            # RMS of jumping & sneaking    
-            rms1 = np.append( rms1, np.sqrt(1/windowsize * np.sum(abs_val1 * abs_val1)) )
-            rms2 = np.append( rms2, np.sqrt(1/windowsize * np.sum(abs_val2 * abs_val2)) )
-            calibration = True
-        ## !!! Output rms1/2 values on serial monitor !!!  
-            
             
         ## CALCULATE RMS STATISTICS
         

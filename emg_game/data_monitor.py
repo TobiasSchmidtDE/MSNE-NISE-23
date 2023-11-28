@@ -9,11 +9,11 @@ current_backend = matplotlib.get_backend()
 print("Current Matplotlib backend:", current_backend)
 
 
-def run_data_monitor():
+def run_data_monitor(sub_port = 5556, sub_topic = "emg_data"):
     context = zmq.Context()
     subscriber = context.socket(zmq.SUB)
-    subscriber.connect(f"tcp://localhost:{5556}")
-    subscriber.setsockopt_string(zmq.SUBSCRIBE, "emg_data")
+    subscriber.connect(f"tcp://localhost:{sub_port}")
+    subscriber.setsockopt_string(zmq.SUBSCRIBE, sub_topic)
 
     #publisher = context.socket(zmq.PUB)
     #publisher.bind(f"tcp://*:{5558}")
@@ -180,4 +180,4 @@ def create_data_monitor_plot(subscriber, publisher):
 
 
 if __name__ == "__main__":
-    run_data_monitor()
+    run_data_monitor(sub_port = 5559, sub_topic = "rms_data")
