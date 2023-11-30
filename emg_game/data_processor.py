@@ -29,6 +29,7 @@ def onset_detection():
 
     np_data = None
     finished_calibraton = False
+    calibrated_std = np.inf
     # add pbar for calibaration progress bar
     pbar = tqdm(total=max(window_size_mean, window_size_std))
     # loop to process the data
@@ -63,12 +64,14 @@ def onset_detection():
         if np_data.shape[0] > max(window_size_mean, window_size_std):
             if not finished_calibraton:
                 print("Finished calibration")
-            finished_calibraton = True
+                calibrated_std = np.std(sensor_data[-window_size_std:], axis=0)
+                finished_calibraton = True
+                pbar.close()
             # calculate the mean and std of the data
             mean = np.mean(sensor_data[-window_size_mean:], axis=0)
-            std = np.std(sensor_data[-window_size_std:], axis=0)
+            
             # calculate the threshold
-            threshold = mean + 3 * std
+            threshold = mean + 8 * calibrated_std
 
 
             # detect spike if the last value is more than 3 stds away from the mean
@@ -97,7 +100,7 @@ def onset_detection():
                 threshold_publisher.send_string(f"emg_onset sensor2;{onset_timestamps_2}")
                 if time.time() - last_vibrate_sensor_2 > vibrate_dely:
                     last_vibrate_sensor_2 = time.time()
-                    vibrate_publisher.send_string(f"vibration vibrate_double")
+                    vibrate_publisher.send_string(f"vibration vibrate_single")
 
 
 

@@ -53,6 +53,8 @@ BG = pygame.image.load(os.path.join("assets/Other", "Track.png"))
 
 FONT_COLOR = (0, 0, 0)
 
+jump_sensor = "sensor1"
+duck_sensor = "sensor2"
 
 class Dinosaur:
     """
@@ -215,7 +217,7 @@ class Bird(Obstacle):
 
 
 def main():
-    global game_speed, x_pos_bg, y_pos_bg, points, obstacles
+    global game_speed, x_pos_bg, y_pos_bg, points, obstacles, jump_sensor, duck_sensor
     run = True
     clock = pygame.time.Clock()
     player = Dinosaur()
@@ -228,6 +230,9 @@ def main():
     obstacles = []
     death_count = 0
     pause = False
+
+    print("jump_sensor", jump_sensor)
+    print("duck_sensor", duck_sensor)
 
     def score():
         global points, game_speed
@@ -303,15 +308,16 @@ def main():
                 # No more messages in the queue
                 break
         if len(emg_cmd) > 0:
-            if emg_cmd[-1] == "sensor1":
-                print("left command issued, ducking")
-                # pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_DOWN))
+            if emg_cmd[-1] == duck_sensor:
+                print("duck command issued, ducking")
+                player.curr_step = player.step_index
+                player.end_step = player.step_index + 10
                 player.dino_duck = True
                 player.dino_run = False
                 player.dino_jump = False
 
-            if emg_cmd[-1] == "sensor2":
-                print("right command issued, jumping")
+            if emg_cmd[-1] == jump_sensor:
+                print("jump command issued, jumping")
                 player.dino_duck = False
                 player.dino_run = False
                 player.dino_jump = True
@@ -395,10 +401,30 @@ def main():
 
 def menu(death_count):
     global points
-    global FONT_COLOR
+    global FONT_COLOR, jump_sensor, duck_sensor
 
     run = True
+    context = zmq.Context()
+
+    subscriber_label_data = context.socket(zmq.SUB)
+    subscriber_label_data.connect(f"tcp://localhost:{5558}")
+    subscriber_label_data.setsockopt_string(zmq.SUBSCRIBE, "emg_onset")
     while run:
+        # Read messages one by one until there are none left
+        emg_cmd = []
+        while True:
+            # print("trying to read emg")
+            try:
+                topic, message = subscriber_label_data.recv_string(
+                    flags=zmq.NOBLOCK
+                ).split()
+                onset_type, onset_time = message.split(";")
+                emg_cmd.append(onset_type)
+            except zmq.Again:
+                # No more messages in the queue
+                break
+
+        
         current_time = datetime.datetime.now().hour
         if 7 < current_time < 19:
             FONT_COLOR = (0, 0, 0)
@@ -444,6 +470,19 @@ def menu(death_count):
                 exit()
             if event.type == pygame.KEYDOWN:
                 main()
+
+        if len(emg_cmd) > 0:
+            if emg_cmd[-1] == "sensor1":
+                print("sensor1")
+                jump_sensor = "sensor1"
+                duck_sensor = "sensor2"
+                main()
+
+            if emg_cmd[-1] == "sensor2":
+                print("sensor2")
+                jump_sensor = "sensor2"
+                duck_sensor = "sensor1"
+                main()    
 
 
 t1 = threading.Thread(target=menu(death_count=0), daemon=True)
