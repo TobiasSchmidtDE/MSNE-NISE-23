@@ -80,7 +80,7 @@ class Dinosaur:
         self.dino_rect.x = self.X_POS
         self.dino_rect.y = self.Y_POS
 
-    def update(self, userInput):
+    def update(self, userInput, y):
         if self.dino_duck:
             self.duck()
         if self.dino_run:
@@ -91,7 +91,7 @@ class Dinosaur:
         if self.step_index >= 10:
             self.step_index = 0
 
-        if (userInput[pygame.K_UP] or userInput[pygame.K_SPACE]) and not self.dino_jump:
+        if (userInput[pygame.K_UP] or userInput[pygame.K_SPACE]) and y >= 300:
             self.dino_duck = False
             self.dino_run = False
             self.dino_jump = True
@@ -204,7 +204,7 @@ def main():
     clock = pygame.time.Clock()
     player = Dinosaur()
     cloud = Cloud()
-    game_speed = 10
+    game_speed = 20
     x_pos_bg = 0
     y_pos_bg = 380
     points = 0
@@ -314,7 +314,10 @@ def main():
         userInput = pygame.key.get_pressed()
 
         player.draw(SCREEN)
-        player.update(userInput)
+        # dino
+        dinosaur_x = player.dino_rect.x
+        dinosaur_y = player.dino_rect.y
+        player.update(userInput, dinosaur_y)
 
         if len(obstacles) == 0:
             if random.randint(0, 2) == 0:
@@ -346,9 +349,6 @@ def main():
             #     player.dino_run = False
             #     player.dino_jump = False
 
-            # dino
-            dinosaur_x = player.dino_rect.x
-            dinosaur_y = player.dino_rect.y
             dino_text = font.render(
                 f"Dinosaur: x={dinosaur_x}, y={dinosaur_y}", True, (0, 0, 0)
             )
