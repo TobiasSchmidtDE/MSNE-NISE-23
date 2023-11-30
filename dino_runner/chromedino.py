@@ -74,6 +74,8 @@ class Dinosaur:
         self.dino_jump = False
 
         self.step_index = 0
+        self.curr_step = 0
+        self.end_step = 0
         self.jump_vel = self.JUMP_VEL
         self.image = self.run_img[0]
         self.dino_rect = self.image.get_rect()
@@ -81,6 +83,33 @@ class Dinosaur:
         self.dino_rect.y = self.Y_POS
 
     def update(self, userInput, y):
+
+        if self.step_index >= 10:
+            self.step_index = 0
+
+        if (userInput[pygame.K_UP] or userInput[pygame.K_SPACE]) and y >= 300:
+            self.curr_step = 0
+            self.end_step = 0
+            self.dino_duck = False
+            self.dino_run = False
+            self.dino_jump = True
+        elif userInput[pygame.K_DOWN] and not self.dino_jump:
+            self.curr_step = self.step_index
+            self.end_step = self.step_index + 35
+            self.dino_duck = True
+            self.dino_run = False
+            self.dino_jump = False
+        elif self.curr_step < self.end_step:
+            self.dino_duck = True
+            self.dino_run = False
+            self.dino_jump = False
+        elif not (self.dino_jump or userInput[pygame.K_DOWN]):
+            self.curr_step = 0
+            self.end_step = 0
+            self.dino_duck = False
+            self.dino_run = True
+            self.dino_jump = False
+
         if self.dino_duck:
             self.duck()
         if self.dino_run:
@@ -88,28 +117,13 @@ class Dinosaur:
         if self.dino_jump:
             self.jump()
 
-        if self.step_index >= 10:
-            self.step_index = 0
-
-        if (userInput[pygame.K_UP] or userInput[pygame.K_SPACE]) and y >= 300:
-            self.dino_duck = False
-            self.dino_run = False
-            self.dino_jump = True
-        elif userInput[pygame.K_DOWN] and not self.dino_jump:
-            self.dino_duck = True
-            self.dino_run = False
-            self.dino_jump = False
-        elif not (self.dino_jump or userInput[pygame.K_DOWN]):
-            self.dino_duck = False
-            self.dino_run = True
-            self.dino_jump = False
-
     def duck(self):
         self.image = self.duck_img[self.step_index // 5]
         self.dino_rect = self.image.get_rect()
         self.dino_rect.x = self.X_POS
         self.dino_rect.y = self.Y_POS_DUCK
         self.step_index += 1
+        self.curr_step += 1
 
     def run(self):
         self.image = self.run_img[self.step_index // 5]
@@ -314,7 +328,7 @@ def main():
         userInput = pygame.key.get_pressed()
 
         player.draw(SCREEN)
-        # dino
+        # dino location parameters
         dinosaur_x = player.dino_rect.x
         dinosaur_y = player.dino_rect.y
         player.update(userInput, dinosaur_y)
