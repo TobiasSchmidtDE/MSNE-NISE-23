@@ -62,7 +62,7 @@ class Dinosaur:
     X_POS = 80
     Y_POS = 310
     Y_POS_DUCK = 340
-    JUMP_VEL = 8.5
+    JUMP_VEL = 2 # 8.5
 
     def __init__(self):
         self.duck_img = DUCKING
@@ -135,9 +135,11 @@ class Dinosaur:
     def jump(self):
         self.image = self.jump_img
         if self.dino_jump:
-            self.dino_rect.y -= self.jump_vel * 4
-            self.jump_vel -= 0.8
-        if self.jump_vel < -self.JUMP_VEL:
+            #print(self.jump_vel)
+            #print(self.dino_rect.y)
+            self.dino_rect.y -= self.jump_vel * (24/self.JUMP_VEL) # 4
+            self.jump_vel -= 0.11 # 0.8
+        if self.dino_rect.y >= 290 or self.jump_vel < -self.JUMP_VEL:
             self.dino_jump = False
             self.jump_vel = self.JUMP_VEL
 
@@ -218,7 +220,7 @@ def main():
     clock = pygame.time.Clock()
     player = Dinosaur()
     cloud = Cloud()
-    game_speed = 20
+    game_speed = 10
     x_pos_bg = 0
     y_pos_bg = 380
     points = 0
