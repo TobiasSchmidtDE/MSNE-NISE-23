@@ -62,7 +62,7 @@ class Dinosaur:
     X_POS = 80
     Y_POS = 310
     Y_POS_DUCK = 340
-    JUMP_VEL = 8.5
+    JUMP_VEL = 2 # 8.5
 
     def __init__(self):
         self.duck_img = DUCKING
@@ -74,13 +74,42 @@ class Dinosaur:
         self.dino_jump = False
 
         self.step_index = 0
+        self.curr_step = 0
+        self.end_step = 0
         self.jump_vel = self.JUMP_VEL
         self.image = self.run_img[0]
         self.dino_rect = self.image.get_rect()
         self.dino_rect.x = self.X_POS
         self.dino_rect.y = self.Y_POS
 
-    def update(self, userInput):
+    def update(self, userInput, y):
+
+        if self.step_index >= 10:
+            self.step_index = 0
+
+        if (userInput[pygame.K_UP] or userInput[pygame.K_SPACE]) and y >= 300:
+            self.curr_step = 0
+            self.end_step = 0
+            self.dino_duck = False
+            self.dino_run = False
+            self.dino_jump = True
+        elif userInput[pygame.K_DOWN] and not self.dino_jump:
+            self.curr_step = self.step_index
+            self.end_step = self.step_index + 35
+            self.dino_duck = True
+            self.dino_run = False
+            self.dino_jump = False
+        elif self.curr_step < self.end_step:
+            self.dino_duck = True
+            self.dino_run = False
+            self.dino_jump = False
+        elif not (self.dino_jump or userInput[pygame.K_DOWN]):
+            self.curr_step = 0
+            self.end_step = 0
+            self.dino_duck = False
+            self.dino_run = True
+            self.dino_jump = False
+
         if self.dino_duck:
             self.duck()
         if self.dino_run:
@@ -88,28 +117,13 @@ class Dinosaur:
         if self.dino_jump:
             self.jump()
 
-        if self.step_index >= 10:
-            self.step_index = 0
-
-        if (userInput[pygame.K_UP] or userInput[pygame.K_SPACE]) and not self.dino_jump:
-            self.dino_duck = False
-            self.dino_run = False
-            self.dino_jump = True
-        elif userInput[pygame.K_DOWN] and not self.dino_jump:
-            self.dino_duck = True
-            self.dino_run = False
-            self.dino_jump = False
-        elif not (self.dino_jump or userInput[pygame.K_DOWN]):
-            self.dino_duck = False
-            self.dino_run = True
-            self.dino_jump = False
-
     def duck(self):
         self.image = self.duck_img[self.step_index // 5]
         self.dino_rect = self.image.get_rect()
         self.dino_rect.x = self.X_POS
         self.dino_rect.y = self.Y_POS_DUCK
         self.step_index += 1
+        self.curr_step += 1
 
     def run(self):
         self.image = self.run_img[self.step_index // 5]
@@ -121,9 +135,11 @@ class Dinosaur:
     def jump(self):
         self.image = self.jump_img
         if self.dino_jump:
-            self.dino_rect.y -= self.jump_vel * 4
-            self.jump_vel -= 0.8
-        if self.jump_vel < -self.JUMP_VEL:
+            #print(self.jump_vel)
+            #print(self.dino_rect.y)
+            self.dino_rect.y -= self.jump_vel * (24/self.JUMP_VEL) # 4
+            self.jump_vel -= 0.11 # 0.8
+        if self.dino_rect.y >= 290 or self.jump_vel < -self.JUMP_VEL:
             self.dino_jump = False
             self.jump_vel = self.JUMP_VEL
 
@@ -315,7 +331,10 @@ def main():
         userInput = pygame.key.get_pressed()
 
         player.draw(SCREEN)
-        player.update(userInput)
+        # dino location parameters
+        dinosaur_x = player.dino_rect.x
+        dinosaur_y = player.dino_rect.y
+        player.update(userInput, dinosaur_y)
 
         if len(obstacles) == 0:
             if random.randint(0, 2) == 0:
@@ -347,9 +366,6 @@ def main():
             #     player.dino_run = False
             #     player.dino_jump = False
 
-            # dino
-            dinosaur_x = player.dino_rect.x
-            dinosaur_y = player.dino_rect.y
             dino_text = font.render(
                 f"Dinosaur: x={dinosaur_x}, y={dinosaur_y}", True, (0, 0, 0)
             )
