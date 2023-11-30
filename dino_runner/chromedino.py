@@ -270,7 +270,7 @@ def main():
 
     subscriber_label_data = context.socket(zmq.SUB)
     subscriber_label_data.connect(f"tcp://localhost:{5558}")
-    subscriber_label_data.setsockopt_string(zmq.SUBSCRIBE, "emg_spike")
+    subscriber_label_data.setsockopt_string(zmq.SUBSCRIBE, "emg_onset")
 
     while run:
         # Read messages one by one until there are none left
@@ -281,19 +281,20 @@ def main():
                 topic, message = subscriber_label_data.recv_string(
                     flags=zmq.NOBLOCK
                 ).split()
-                emg_cmd.append(message)
+                onset_type, onset_time = message.split(";")
+                emg_cmd.append(onset_type)
             except zmq.Again:
                 # No more messages in the queue
                 break
         if len(emg_cmd) > 0:
-            if emg_cmd[-1] == "left":
+            if emg_cmd[-1] == "sensor1":
                 print("left command issued, ducking")
                 # pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_DOWN))
                 player.dino_duck = True
                 player.dino_run = False
                 player.dino_jump = False
 
-            if emg_cmd[-1] == "right":
+            if emg_cmd[-1] == "sensor2":
                 print("right command issued, jumping")
                 player.dino_duck = False
                 player.dino_run = False
