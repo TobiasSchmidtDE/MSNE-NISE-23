@@ -12,8 +12,8 @@ pygame.init()
 
 # Global Constants
 
-SCREEN_HEIGHT = 600
-SCREEN_WIDTH = 1100
+SCREEN_HEIGHT = 800 # 600
+SCREEN_WIDTH = 1300 # 1100
 SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 pygame.display.set_caption("Chrome Dino Runner")
@@ -137,11 +137,9 @@ class Dinosaur:
     def jump(self):
         self.image = self.jump_img
         if self.dino_jump:
-            #print(self.jump_vel)
-            #print(self.dino_rect.y)
             self.dino_rect.y -= self.jump_vel * (24/self.JUMP_VEL) # 4
             self.jump_vel -= 0.11 # 0.8
-        if self.dino_rect.y >= 290 or self.jump_vel < -self.JUMP_VEL:
+        if self.jump_vel < -self.JUMP_VEL:
             self.dino_jump = False
             self.jump_vel = self.JUMP_VEL
 
@@ -308,16 +306,18 @@ def main():
                 # No more messages in the queue
                 break
         if len(emg_cmd) > 0:
-            if emg_cmd[-1] == duck_sensor:
+            if emg_cmd[-1] == duck_sensor and not player.dino_jump:
                 print("duck command issued, ducking")
                 player.curr_step = player.step_index
-                player.end_step = player.step_index + 10
+                player.end_step = player.step_index + 35
                 player.dino_duck = True
                 player.dino_run = False
                 player.dino_jump = False
 
-            if emg_cmd[-1] == jump_sensor:
+            if emg_cmd[-1] == jump_sensor and player.dino_rect.y >= 300:
                 print("jump command issued, jumping")
+                player.curr_step = 0
+                player.end_step = 0
                 player.dino_duck = False
                 player.dino_run = False
                 player.dino_jump = True
@@ -333,7 +333,8 @@ def main():
         if 7 < current_time < 19:
             SCREEN.fill((255, 255, 255))
         else:
-            SCREEN.fill((0, 0, 0))
+            SCREEN.fill((255, 255, 255))
+            #SCREEN.fill((0, 0, 0))
         userInput = pygame.key.get_pressed()
 
         player.draw(SCREEN)
@@ -349,35 +350,6 @@ def main():
                 obstacles.append(LargeCactus(LARGE_CACTUS))
             elif random.randint(0, 2) == 2:
                 obstacles.append(Bird(BIRD))
-
-        # print coordinates of obstacle and dino
-        if len(obstacles) > 0:
-            # obstacle
-            first_obstacle = obstacles[0]
-            obstacle_x = first_obstacle.rect.x
-            obstacle_y = first_obstacle.rect.y
-            obstacle_text = font.render(
-                f"Obstacle: x={obstacle_x}, y={obstacle_y}", True, (0, 0, 0)
-            )
-            obtextRect = obstacle_text.get_rect()
-            obtextRect.center = (140, 20)
-            SCREEN.blit(obstacle_text, obtextRect)
-
-            # if obstacle_x <= 17 * game_speed and obstacle_y >= 290:
-            #     player.dino_jump = True
-            #     player.dino_duck = False
-            #     player.dino_run = False
-            # if obstacle_x <= 17 * game_speed and obstacle_y < 290:
-            #     player.dino_duck = True
-            #     player.dino_run = False
-            #     player.dino_jump = False
-
-            dino_text = font.render(
-                f"Dinosaur: x={dinosaur_x}, y={dinosaur_y}", True, (0, 0, 0)
-            )
-            ditextRect = dino_text.get_rect()
-            ditextRect.center = (135, 50)
-            SCREEN.blit(dino_text, ditextRect)
 
         for obstacle in obstacles:
             # here the obstacles are spawned
@@ -430,8 +402,10 @@ def menu(death_count):
             FONT_COLOR = (0, 0, 0)
             SCREEN.fill((255, 255, 255))
         else:
-            FONT_COLOR = (255, 255, 255)
-            SCREEN.fill((128, 128, 128))
+            FONT_COLOR = (0, 0, 0)
+            SCREEN.fill((255, 255, 255))
+            # FONT_COLOR = (255, 255, 255)
+            # SCREEN.fill((128, 128, 128))
         font = pygame.font.Font("freesansbold.ttf", 30)
 
         if death_count == 0:

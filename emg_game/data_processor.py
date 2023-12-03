@@ -15,7 +15,6 @@ def onset_detection():
     threshold_publisher = context.socket(zmq.PUB)
     threshold_publisher.bind(f"tcp://*:{5558}")
 
-    
     # Publisher to send commands to pygame
     vibrate_publisher = context.socket(zmq.PUB)
     vibrate_publisher.bind(f"tcp://*:{5560}")
@@ -100,8 +99,7 @@ def onset_detection():
                 threshold_publisher.send_string(f"emg_onset sensor2;{onset_timestamps_2}")
                 if time.time() - last_vibrate_sensor_2 > vibrate_dely:
                     last_vibrate_sensor_2 = time.time()
-                    vibrate_publisher.send_string(f"vibration vibrate_single")
-
+                    vibrate_publisher.send_string(f"vibration vibrate_double")
 
 
 

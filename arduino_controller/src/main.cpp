@@ -26,11 +26,13 @@ int baseline2 = 1700;       // Preset baseline for sensor 2
 // Motor control pin
 // 12 and 13
 int motorPin1 = 13;  // GPIO 13 for vibration motor 1
+int motorPin2 = 12;  // GPIO 12 for vibration motor 2
 bool motorOn = true; // Flag for motor use (for debug purposes)
 
 void setup() {
   Serial.begin(512000);  // Start serial communication at 512000 bps
   pinMode(motorPin1, OUTPUT);  // Configure the motor pin as an output
+  pinMode(motorPin2, OUTPUT);
 }
 
 void loop() {
@@ -97,13 +99,13 @@ void loop() {
       }
     } else if (command == "vibrate_double") {
       if (motorOn) {
-        digitalWrite(motorPin1, HIGH);  // Activate motor
+        digitalWrite(motorPin2, HIGH);  // Activate motor
         delay(100);  // Vibration duration
-        digitalWrite(motorPin1, LOW);   // Deactivate motor
+        digitalWrite(motorPin2, LOW);   // Deactivate motor
         delay(100);
-        digitalWrite(motorPin1, HIGH);  // Activate motor again
+        digitalWrite(motorPin2, HIGH);  // Activate motor again
         delay(100);  // Vibration duration
-        digitalWrite(motorPin1, LOW);   // Deactivate motor
+        digitalWrite(motorPin2, LOW);   // Deactivate motor
       }
     } else if (command == "motor_on"){
       motorOn = true;

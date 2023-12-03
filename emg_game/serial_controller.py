@@ -4,7 +4,7 @@ import serial
 
 
 # Customizable constants
-SERIAL_PORT = "COM6"  # Serial port (change this to the correct port for your system)
+SERIAL_PORT = "COM5"  # Serial port (change this to the correct port for your system)
 BAUD_RATE = 512000  # Baud rate for serial communication
 
 

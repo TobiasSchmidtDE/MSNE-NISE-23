@@ -56,4 +56,4 @@ def start_components(mode: str):
 
 
 if __name__ == "__main__":
-    start_components(mode="mock_controller")
+    start_components(mode="data_collection")
